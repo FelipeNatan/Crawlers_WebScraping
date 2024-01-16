@@ -1,0 +1,117 @@
+#CODIGO COMPLETO
+#PARTE 1
+
+#Pacotes utilizados
+pacotes <- c("httr","rvest","jsonlite","dplyr")
+
+if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
+  instalador <- pacotes[!pacotes %in% installed.packages()]
+  for(i in 1:length(instalador)) {
+    install.packages(instalador, dependencies = T)
+    break()}
+  sapply(pacotes, require, character = T) 
+} else {
+  sapply(pacotes, require, character = T) 
+}
+
+
+library("httr")
+library("rvest")
+library("dplyr")
+
+
+# Busca dados na internet - rvest
+
+#Página: https://en.wikipedia.org/wiki/Web_scraping
+
+#função de leitura 
+wikipedia <- read_html("https://en.wikipedia.org/wiki/Web_scraping")
+
+#busca nó de título (PARSE)
+wikipedia %>% html_elements("title") %>% html_text() 
+
+#busca nó de heading, mas tira parte do código HTML
+wikipedia %>% html_elements("h1") %>% html_text()
+
+#busca nó de parágrafo, mas tira parte do código HTML
+data <- wikipedia %>% html_elements("p") %>% html_text()
+
+length(data)
+
+data[2]
+
+
+# Busca dados específicos em uma web page - rvest
+
+#Vamos olhar a página: https://en.wikipedia.org/wiki/Web_scraping
+
+library("rvest")
+
+#função de leitura
+wikipedia <- read_html("https://en.wikipedia.org/wiki/Web_scraping")
+
+#Busca específico 
+# "FAQ about linking – Are website terms of use binding contracts?".
+body_text <- wikipedia %>% html_elements("#cite_note-5") %>% html_text()
+
+substr(body_text, start = 1, stop = 20)
+
+substr(body_text, start = 21, stop = nchar(body_text))
+
+
+#Busca item listado
+techniques <- wikipedia %>% html_elements("#Techniques") %>% html_text()
+techniques
+
+
+# Busca dados específicos em uma web page - httr
+
+#Vamos olhar a página http://www.r-datacollection.com/materials/html/OurFirstHTML.html
+
+library("httr")
+
+#Usa método GET()
+website <- GET("http://www.r-datacollection.com/materials/html/OurFirstHTML.html")
+
+#Visualiza como texto
+content(website, "text")
+
+
+
+# Busca dados específicos em uma API IBGE - httr
+library("rvest")
+library("httr")
+library("jsonlite")
+
+#Mostra API de países do IBGE
+#https://servicodados.ibge.gov.br/api/docs/paises
+
+#Parâmetros
+#country = "BR"
+
+#"77823"  #pib per capita
+#"77819" #gastos com educação
+
+
+#1 - Listagem de indicadores - mostra as características 
+
+url = "https://servicodados.ibge.gov.br/api/v1/paises/indicadores/77823"
+
+page_data <- GET(url)
+
+result <- fromJSON(rawToChar(page_data$content))
+result
+
+#2 - Indicadores - mostra os valores
+
+url2 = "https://servicodados.ibge.gov.br/api/v1/paises/BR/indicadores/77819"
+
+page_data2 <- GET(url2)
+
+#tipo de arquivo
+http_type(page_data2)
+
+jsonText <- content(page_data2, "text", encoding = "UTF-8")
+jsonParsed <- content(page_data2, "parsed")
+jsonParsed
+jsonParsed[[1]][["series"]][[1]][["serie"]][[4]][["1995"]]
